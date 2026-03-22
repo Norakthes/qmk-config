@@ -11,10 +11,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout keyboard repo
+      - name: Checkout qmk_firmware repo
         uses: actions/checkout@v4
         with:
-          path: keyboard
+          submodules: recursive
 
       - name: Install dependencies
         run: |
@@ -24,24 +24,11 @@ jobs:
       - name: Install QMK CLI
         run: pip3 install qmk
 
-      - name: QMK setup
-        run: qmk setup --yes
-
-      - name: Copy keyboard into QMK
-        run: |
-          mkdir -p $HOME/qmk_firmware/keyboards/scylla_waveshare_rp2040_zero
-          cp -r keyboard/. $HOME/qmk_firmware/keyboards/scylla_waveshare_rp2040_zero/
+      - name: Set QMK home to this repo
+        run: qmk config user.qmk_home=$(pwd)
 
       - name: Build firmware
         run: |
-          cd $HOME/qmk_firmware
-          echo "=== QMK firmware dir contents ==="
-          ls -la
-          echo "=== keyboards dir ==="
-          ls keyboards/ | grep scylla || echo "keyboard not found!"
-          echo "=== keyboard contents ==="
-          ls keyboards/scylla_waveshare_rp2040_zero/ || echo "keyboard dir missing!"
-          echo "=== running make ==="
           make scylla_waveshare_rp2040_zero:default
           echo "=== looking for uf2 ==="
           find . -name "*.uf2" 2>/dev/null
@@ -49,8 +36,8 @@ jobs:
 
       - name: Copy handedness EEPROM files
         run: |
-          cp $HOME/qmk_firmware/quantum/split_common/eeprom-lefthand.eep $GITHUB_WORKSPACE/eeprom-lefthand.eep
-          cp $HOME/qmk_firmware/quantum/split_common/eeprom-righthand.eep $GITHUB_WORKSPACE/eeprom-righthand.eep
+          cp quantum/split_common/eeprom-lefthand.eep $GITHUB_WORKSPACE/eeprom-lefthand.eep
+          cp quantum/split_common/eeprom-righthand.eep $GITHUB_WORKSPACE/eeprom-righthand.eep
 
       - name: Upload firmware artifacts
         uses: actions/upload-artifact@v4
