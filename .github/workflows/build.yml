@@ -1,0 +1,48 @@
+name: Build QMK Firmware
+
+on:
+  push:
+    branches: master
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout keyboard repo
+        uses: actions/checkout@v4
+        with:
+          path: keyboard
+
+      - name: Install QMK CLI
+        run: pip3 install qmk
+
+      - name: QMK setup
+        run: qmk setup --yes
+
+      - name: Copy keyboard into QMK
+        run: |
+          cp -r keyboard/. $HOME/qmk_firmware/keyboards/scylla_waveshare_rp2040_zero/
+
+      - name: Build left half
+        run: |
+          cd $HOME/qmk_firmware
+          make scylla_waveshare_rp2040_zero:default:uf2-split-left BOOTLOADER=uf2-split-left 2>&1 | tee /dev/stderr
+          cp scylla_waveshare_rp2040_zero_default.uf2 $GITHUB_WORKSPACE/scylla_left.uf2
+
+      - name: Build right half
+        run: |
+          cd $HOME/qmk_firmware
+          make scylla_waveshare_rp2040_zero:default:uf2-split-right BOOTLOADER=uf2-split-right 2>&1 | tee /dev/stderr
+          cp scylla_waveshare_rp2040_zero_default.uf2 $GITHUB_WORKSPACE/scylla_right.uf2
+
+      - name: Upload firmware artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: scylla-firmware
+          path: |
+            scylla_left.uf2
+            scylla_right.uf2
+          retention-days: 90
