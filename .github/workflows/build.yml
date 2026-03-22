@@ -2,7 +2,7 @@ name: Build QMK Firmware
 
 on:
   push:
-    branches: master
+    branches: [main, master]
   pull_request:
   workflow_dispatch:
 
@@ -29,12 +29,14 @@ jobs:
 
       - name: Copy keyboard into QMK
         run: |
+          mkdir -p $HOME/qmk_firmware/keyboards/scylla_waveshare_rp2040_zero
           cp -r keyboard/. $HOME/qmk_firmware/keyboards/scylla_waveshare_rp2040_zero/
 
       - name: Build firmware
         run: |
-          qmk compile -kb scylla_waveshare_rp2040_zero -km default
-          cp $HOME/qmk_firmware/scylla_waveshare_rp2040_zero_default.uf2 $GITHUB_WORKSPACE/scylla.uf2
+          cd $HOME/qmk_firmware
+          make scylla_waveshare_rp2040_zero:default
+          cp scylla_waveshare_rp2040_zero_default.uf2 $GITHUB_WORKSPACE/scylla.uf2
 
       - name: Copy handedness EEPROM files
         run: |
