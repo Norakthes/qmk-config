@@ -35,7 +35,16 @@ jobs:
       - name: Build firmware
         run: |
           cd $HOME/qmk_firmware
+          echo "=== QMK firmware dir contents ==="
+          ls -la
+          echo "=== keyboards dir ==="
+          ls keyboards/ | grep scylla || echo "keyboard not found!"
+          echo "=== keyboard contents ==="
+          ls keyboards/scylla_waveshare_rp2040_zero/ || echo "keyboard dir missing!"
+          echo "=== running make ==="
           make scylla_waveshare_rp2040_zero:default
+          echo "=== looking for uf2 ==="
+          find . -name "*.uf2" 2>/dev/null
           cp scylla_waveshare_rp2040_zero_default.uf2 $GITHUB_WORKSPACE/scylla.uf2
 
       - name: Copy handedness EEPROM files
